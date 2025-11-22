@@ -93,11 +93,12 @@ spec:
     spec:
       # mount the configmap as volume
       volumes:
-        - name: nginx-config
+        - name: nginx
           configMap:
             name: nginx
             items:
               - key: nginx.conf
+                path: nginx.conf
       containers:
         - name: nginx
           image: joindevops/frontend:1.0.0
@@ -105,7 +106,7 @@ spec:
             - containerPort: 8080
           # mount the config file
           volumeMounts:
-            - name: nginx-config
+            - name: nginx
               mountPath: /etc/nginx/nginx.conf
               subPath: nginx.conf
               readOnly: true
