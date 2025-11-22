@@ -102,6 +102,17 @@ spec:
       containers:
         - name: nginx
           image: joindevops/frontend:1.0.0
+          # this is required to limit the resource usage of frontend pods in order to scale horizontally. otherwize HPA will not know how to scale.
+          # this is used by metrics server
+          resources:
+            # soft limit
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            # hard limit
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
           ports:
             - containerPort: 8080
           # mount the config file
@@ -126,3 +137,24 @@ spec:
       port: 8080 # Service Port
       targetPort: 8080 # Container Port
   type: ClusterIP
+---
+# this will autoscale the frontend deployment based on cpu utilization
+apiVersion: v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: frontend
+  namespace: expense
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: frontend
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
